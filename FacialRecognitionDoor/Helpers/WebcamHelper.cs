@@ -6,6 +6,7 @@ using Windows.Media.Capture;
 using Windows.Media.MediaProperties;
 using Windows.Storage;
 using Windows.UI.Xaml.Media.Imaging;
+using System.Linq;
 
 namespace IotPrototype.Helpers
 {
@@ -28,7 +29,7 @@ namespace IotPrototype.Helpers
                 // Attempt to get attached webcam
                 var cameraDevice = await FindCameraDevice();
 
-                if(cameraDevice == null)
+                if (cameraDevice == null)
                 {
                     // No camera found, report the error and break out of initialization
                     Debug.WriteLine("No camera found!");
@@ -40,8 +41,28 @@ namespace IotPrototype.Helpers
                 var settings = new MediaCaptureInitializationSettings { VideoDeviceId = cameraDevice.Id };
 
                 mediaCapture = new MediaCapture();
+
                 await mediaCapture.InitializeAsync(settings);
+                await SetMinimalResolution(MediaStreamType.Photo);
+                await SetMinimalResolution(MediaStreamType.VideoPreview);
+                await SetMinimalResolution(MediaStreamType.VideoRecord);
+
                 initialized = true;
+            }
+        }
+
+        private async Task SetMinimalResolution(MediaStreamType type)
+        {
+            var resolutions = mediaCapture.VideoDeviceController.GetAvailableMediaStreamProperties(type);
+            var resolution = resolutions
+                .OfType<VideoEncodingProperties>()
+                .OrderBy(r => r.FrameRate.Numerator / r.FrameRate.Denominator)
+                .ThenBy(r => r.Height * r.Width)
+                .FirstOrDefault();
+
+            if (resolution != null)
+            {
+                await mediaCapture.VideoDeviceController.SetMediaStreamPropertiesAsync(type, resolution);
             }
         }
 
@@ -54,7 +75,7 @@ namespace IotPrototype.Helpers
             // Get available devices for capturing pictures
             var allVideoDevices = await DeviceInformation.FindAllAsync(DeviceClass.VideoCapture);
 
-            
+
             if (allVideoDevices.Count > 0)
             {
                 // If there is a device attached, return the first device found
@@ -73,14 +94,14 @@ namespace IotPrototype.Helpers
         public async Task StartCameraPreview()
         {
             try
-            {                
+            {
                 await mediaCapture.StartPreviewAsync();
             }
             catch
             {
                 initialized = false;
                 Debug.WriteLine("Failed to start camera preview stream");
-                    
+
             }
         }
 

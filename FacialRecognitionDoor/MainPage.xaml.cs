@@ -14,6 +14,7 @@ using IotPrototype.Helpers;
 using IotPrototype.Objects;
 using Microsoft.ProjectOxford.Face;
 using System.Text;
+using System.Linq;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -172,7 +173,7 @@ namespace IotPrototype
             if (speech == null)
             {
                 speech = new SpeechHelper(speechMediaElement);
-                await speech.Read(SpeechContants.InitialGreetingMessage);
+                //await speech.Read(SpeechContants.InitialGreetingMessage);
             }
             else
             {
@@ -241,55 +242,55 @@ namespace IotPrototype
                 // Stores current frame from webcam feed in a temporary folder
                 StorageFile image = await webcam.CapturePhoto();
 
+                //try
+                //{
+                //    // Oxford determines whether or not the visitor is on the Whitelist and returns true if so
+                //    recognizedVisitors = await OxfordFaceAPIHelper.IsFaceInWhitelist(image);
+                //}
+                //catch (FaceRecognitionException fe)
+                //{
+                //    switch (fe.ExceptionType)
+                //    {
+                //        // Fails and catches as a FaceRecognitionException if no face is detected in the image
+                //        case FaceRecognitionExceptionType.NoFaceDetected:
+                //            Debug.WriteLine("WARNING: No face detected in this image.");
+                //            break;
+                //    }
+                //}
+                //catch (FaceAPIException faceAPIEx)
+                //{
+                //    Debug.WriteLine("FaceAPIException in IsFaceInWhitelist(): " + faceAPIEx.ErrorMessage);
+                //}
+                //catch
+                //{
+                //    // General error. This can happen if there are no visitors authorized in the whitelist
+                //    Debug.WriteLine("WARNING: Oxford just threw a general expception.");
+                //}
+
+                //if(recognizedVisitors.Count > 0)
+                //{
+                //    // If everything went well and a visitor was recognized, unlock the door:
+                //    UnlockDoor(recognizedVisitors[0]);
+                //}
+                //else
+                //{
+                //    // Otherwise, inform user that they were not recognized by the system
+                //    await speech.Read(SpeechContants.VisitorNotRecognizedMessage);
+                //}
+
                 try
                 {
-                    // Oxford determines whether or not the visitor is on the Whitelist and returns true if so
-                    recognizedVisitors = await OxfordFaceAPIHelper.IsFaceInWhitelist(image);
-                }
-                catch (FaceRecognitionException fe)
-                {
-                    switch (fe.ExceptionType)
+                    var emotions = EmotionHelper.DetectEmotions(image);
+                    var allEmotions = (await emotions).Scores.ToRankedList().Where(i=>i.Value > 0.1).OrderByDescending(i => i.Value);
+
+                    var builder = new StringBuilder();
+                    builder.Append("You feel ");
+                    foreach (var emotion in allEmotions)
                     {
-                        // Fails and catches as a FaceRecognitionException if no face is detected in the image
-                        case FaceRecognitionExceptionType.NoFaceDetected:
-                            Debug.WriteLine("WARNING: No face detected in this image.");
-                            break;
+                        builder.Append($"{(int)(emotion.Value * 100)} percent {emotion.Key} ");
                     }
-                }
-                catch (FaceAPIException faceAPIEx)
-                {
-                    Debug.WriteLine("FaceAPIException in IsFaceInWhitelist(): " + faceAPIEx.ErrorMessage);
-                }
-                catch
-                {
-                    // General error. This can happen if there are no visitors authorized in the whitelist
-                    Debug.WriteLine("WARNING: Oxford just threw a general expception.");
-                }
 
-                if(recognizedVisitors.Count > 0)
-                {
-                    // If everything went well and a visitor was recognized, unlock the door:
-                    UnlockDoor(recognizedVisitors[0]);
-                }
-                else
-                {
-                    // Otherwise, inform user that they were not recognized by the system
-                    await speech.Read(SpeechContants.VisitorNotRecognizedMessage);
-                }
-
-                try
-                {
-                    var emotion = EmotionHelper.DetectEmotions(image);
-                    var scores = emotion.Result.Scores.ToRankedList();
-                    var resultBuffer = new StringBuilder();
-
-                    //foreach (var score in scores)
-                    //{
-                    //    result.Append($"{score.Key}: {score.Value}, ");
-                    //}
-
-                    //resultBuffer.Length = resultBuffer.Length - 2
-                    //var result = resultBuffer.ToString();
+                    await speech.Read(builder.ToString());
                 }
                 catch (Exception ex)
                 {
@@ -463,6 +464,7 @@ namespace IotPrototype
 
         async private void Timer_Tick(object sender, object e)
         {
+            return;
             var gpioValue = movePin.Read();
             MoveDetected.Visibility = gpioValue == GpioPinValue.High ? Visibility.Collapsed : Visibility.Visible;
 

@@ -74,7 +74,7 @@ namespace IotPrototype.FacialRecognition
             await _faceApiClient.TrainPersonGroupAsync(WhitelistId);
 
             TrainingStatus status;
-            
+
 
             while(true)
             {
@@ -147,7 +147,7 @@ namespace IotPrototype.FacialRecognition
 
                 await BuildWhiteListAsync(progress, progressCnt);
             }
-            
+
             catch(FaceAPIException fe)
             {
                 isSuccess = false;
@@ -195,7 +195,7 @@ namespace IotPrototype.FacialRecognition
                     Debug.WriteLine("BuildWhiteList: Processing " + file.Path);
                     try
                     {
-                        
+
                         var faceId = await IdentifyFaceFromImage(file);
                         await AddFace(personId, faceId, file.Path);
 
@@ -298,14 +298,16 @@ namespace IotPrototype.FacialRecognition
         /// <returns>face id</returns>
         private async Task<Guid[]> IdentifyFacesFromImage(StorageFile imageFile)
         {
-            var stream = await imageFile.OpenStreamForReadAsync();
-            var faces = await _faceApiClient.DetectAsync(stream);
-            if (faces == null || faces.Length < 1)
+            using (var stream = await imageFile.OpenStreamForReadAsync())
             {
-                throw new FaceRecognitionException(FaceRecognitionExceptionType.NoFaceDetected);
-            }
+                var faces = await _faceApiClient.DetectAsync(stream);
+                if (faces == null || faces.Length < 1)
+                {
+                    throw new FaceRecognitionException(FaceRecognitionExceptionType.NoFaceDetected);
+                }
 
-            return FaceApiUtils.FacesToFaceIds(faces) ;
+                return FaceApiUtils.FacesToFaceIds(faces);
+            }
         }
 
         public async Task<bool> AddImageToWhitelistAsync(StorageFile imageFile, string personName = null)
@@ -379,7 +381,7 @@ namespace IotPrototype.FacialRecognition
         }
 
 
-        
+
         #endregion
 
         #region Person
@@ -454,7 +456,7 @@ namespace IotPrototype.FacialRecognition
                 isSuccess = await TrainingWhitelistAsync();
             }
 
-            return isSuccess;                
+            return isSuccess;
         }
 
         public async Task<bool> RemovePersonFromWhitelistAsync(string personName)
@@ -527,10 +529,9 @@ namespace IotPrototype.FacialRecognition
             {
                 throw new FaceRecognitionException(FaceRecognitionExceptionType.InvalidImage);
             }
-
             using (var imageStram = await imageFile.OpenStreamForReadAsync())
             {
-                //List<FaceAttributeType> 
+                //List<FaceAttributeType>
 
                 return await _faceApiClient.DetectAsync(imageStram, true, true, new FaceAttributeType[] { FaceAttributeType.Age, FaceAttributeType.FacialHair, FaceAttributeType.Gender, FaceAttributeType.HeadPose, FaceAttributeType.Smile });
             }
