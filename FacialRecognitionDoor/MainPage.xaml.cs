@@ -288,8 +288,8 @@ namespace IotPrototype
                     //    result.Append($"{score.Key}: {score.Value}, ");
                     //}
 
-                    //resultBuffer.Length = result
-                    //var result =
+                    //resultBuffer.Length = resultBuffer.Length - 2
+                    //var result = resultBuffer.ToString();
                 }
                 catch (Exception ex)
                 {
