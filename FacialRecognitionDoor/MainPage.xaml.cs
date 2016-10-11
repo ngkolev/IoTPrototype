@@ -13,6 +13,7 @@ using Windows.UI.Xaml.Navigation;
 using IotPrototype.Helpers;
 using IotPrototype.Objects;
 using Microsoft.ProjectOxford.Face;
+using System.Text;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -52,6 +53,9 @@ namespace IotPrototype
             // Causes this page to save its state when navigating to other pages
             NavigationCacheMode = NavigationCacheMode.Enabled;
 
+            InitalizeMoveDetection();
+
+
             if (initializedOxford == false)
             {
                 // If Oxford facial recognition has not been initialized, attempt to initialize it
@@ -65,7 +69,7 @@ namespace IotPrototype
             }
 
             // If user has set the DisableLiveCameraFeed within Constants.cs to true, disable the feed:
-            if(GeneralConstants.DisableLiveCameraFeed)
+            if (GeneralConstants.DisableLiveCameraFeed)
             {
                 LiveFeedPanel.Visibility = Visibility.Collapsed;
                 DisabledFeedGrid.Visibility = Visibility.Visible;
@@ -107,7 +111,7 @@ namespace IotPrototype
         {
             try
             {
-                // Attempts to initialize application GPIO. 
+                // Attempts to initialize application GPIO.
                 gpioHelper = new GpioHelper();
                 gpioAvailable = gpioHelper.Initialize();
             }
@@ -240,7 +244,7 @@ namespace IotPrototype
                 try
                 {
                     // Oxford determines whether or not the visitor is on the Whitelist and returns true if so
-                    recognizedVisitors = await OxfordFaceAPIHelper.IsFaceInWhitelist(image);                    
+                    recognizedVisitors = await OxfordFaceAPIHelper.IsFaceInWhitelist(image);
                 }
                 catch (FaceRecognitionException fe)
                 {
@@ -261,7 +265,7 @@ namespace IotPrototype
                     // General error. This can happen if there are no visitors authorized in the whitelist
                     Debug.WriteLine("WARNING: Oxford just threw a general expception.");
                 }
-                
+
                 if(recognizedVisitors.Count > 0)
                 {
                     // If everything went well and a visitor was recognized, unlock the door:
@@ -272,6 +276,27 @@ namespace IotPrototype
                     // Otherwise, inform user that they were not recognized by the system
                     await speech.Read(SpeechContants.VisitorNotRecognizedMessage);
                 }
+
+                try
+                {
+                    var emotion = EmotionHelper.DetectEmotions(image);
+                    var scores = emotion.Result.Scores.ToRankedList();
+                    var resultBuffer = new StringBuilder();
+
+                    //foreach (var score in scores)
+                    //{
+                    //    result.Append($"{score.Key}: {score.Value}, ");
+                    //}
+
+                    //resultBuffer.Length = result
+                    //var result =
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                }
+
+
             }
             else
             {
@@ -312,7 +337,7 @@ namespace IotPrototype
         /// Called when user hits vitual add user button. Navigates to NewUserPage page.
         /// </summary>
         private async void NewUserButton_Click(object sender, RoutedEventArgs e)
-        { 
+        {
             // Stops camera preview on this page, so that it can be started on NewUserPage
             await webcam.StopCameraPreview();
 
@@ -384,7 +409,7 @@ namespace IotPrototype
         }
 
         /// <summary>
-        /// Triggered when the user selects a visitor in the WhitelistedUsersGrid 
+        /// Triggered when the user selects a visitor in the WhitelistedUsersGrid
         /// </summary>
         private void WhitelistedUsersGrid_ItemClick(object sender, ItemClickEventArgs e)
         {
@@ -400,5 +425,68 @@ namespace IotPrototype
             // Exit app
             Application.Current.Exit();
         }
+
+
+
+        private void InitalizeMoveDetection()
+        {
+            var controller = GpioController.GetDefault();
+
+            movePin = controller.OpenPin(17);
+
+            DispatcherTimer timer = new DispatcherTimer();
+            timer.Interval = new TimeSpan(0, 0, 0, 0, 500);
+            timer.Tick += Timer_Tick;
+            timer.Start();
+        }
+
+        private GpioPin movePin;
+        private GpioPinValue lastMoveValue = GpioPinValue.High;
+
+        private Random random = new Random();
+        int currentTextIndex = 0;
+        string[] bustedWords = new string[]
+        {
+            "Hello beauty",
+            "Move bitch",
+            "Busted",
+            "Stop right there",
+            "British homosexual",
+            "Just Gay",
+            "Detected",
+            "Developper detected",
+            "Casting couch",
+            "Hello, Gorgeous!"
+        };
+
+
+
+        async private void Timer_Tick(object sender, object e)
+        {
+            var gpioValue = movePin.Read();
+            MoveDetected.Visibility = gpioValue == GpioPinValue.High ? Visibility.Collapsed : Visibility.Visible;
+
+            //  "Move bitch"
+            if (lastMoveValue != gpioValue && gpioValue == GpioPinValue.Low)
+            {
+                string text = bustedWords[random.Next(9)];
+                MoveDetected.Text = text;
+                //currentTextIndex++;
+                await speech.Read(text);
+            }
+
+            lastMoveValue = gpioValue;
+
+            //int value = gpioValue == GpioPinValue.High ? 1 : 0;
+
+            /*moveValues.Add(new KeyValuePair<DateTime, int>(DateTime.Now, value));*/
+
+
+            //Debug.WriteLine("Value: " + value.ToString());
+
+        }
+
+
+
     }
 }

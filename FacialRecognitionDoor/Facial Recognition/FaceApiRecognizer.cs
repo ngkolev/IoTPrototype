@@ -47,7 +47,7 @@ namespace IotPrototype.FacialRecognition
         /// Initial Face Api client
         /// </summary>
         private FaceApiRecognizer() {
-            _faceApiClient = new FaceServiceClient(GeneralConstants.OxfordAPIKey);
+            _faceApiClient = new FaceServiceClient(GeneralConstants.FaceAPIKey);
         }
         #endregion
 
@@ -196,7 +196,7 @@ namespace IotPrototype.FacialRecognition
                     try
                     {
                         
-                        var faceId = await DetectFaceFromImage(file);
+                        var faceId = await IdentifyFaceFromImage(file);
                         await AddFace(personId, faceId, file.Path);
 
                         Debug.WriteLine("This image added to whitelist successfully!");
@@ -273,7 +273,7 @@ namespace IotPrototype.FacialRecognition
         /// Note: the image must only contains exactly one face
         /// </param>
         /// <returns>face id</returns>
-        private async Task<Guid> DetectFaceFromImage(StorageFile imageFile)
+        private async Task<Guid> IdentifyFaceFromImage(StorageFile imageFile)
         {
             var stream = await imageFile.OpenStreamForReadAsync();
             var faces = await _faceApiClient.DetectAsync(stream);
@@ -296,7 +296,7 @@ namespace IotPrototype.FacialRecognition
         /// image file to detect face
         /// </param>
         /// <returns>face id</returns>
-        private async Task<Guid[]> DetectFacesFromImage(StorageFile imageFile)
+        private async Task<Guid[]> IdentifyFacesFromImage(StorageFile imageFile)
         {
             var stream = await imageFile.OpenStreamForReadAsync();
             var faces = await _faceApiClient.DetectAsync(stream);
@@ -336,7 +336,7 @@ namespace IotPrototype.FacialRecognition
                 }
 
                 // detect faces
-                var faceId = await DetectFaceFromImage(imageFile);
+                var faceId = await IdentifyFaceFromImage(imageFile);
                 await AddFace(personId, faceId, imageFile.Path);
 
                 // train whitelist
@@ -377,6 +377,9 @@ namespace IotPrototype.FacialRecognition
             }
             return isSuccess;
         }
+
+
+        
         #endregion
 
         #region Person
@@ -427,7 +430,7 @@ namespace IotPrototype.FacialRecognition
                     try
                     {
                         // detect faces
-                        var faceId = await DetectFaceFromImage(file);
+                        var faceId = await IdentifyFaceFromImage(file);
                         await AddFace(personId, faceId, file.Path);
                     }
                     catch(FaceRecognitionException fe)
@@ -498,7 +501,7 @@ namespace IotPrototype.FacialRecognition
             }
 
             // detect all faces in the image
-            var faceIds = await DetectFacesFromImage(imageFile);
+            var faceIds = await IdentifyFacesFromImage(imageFile);
 
             // try to identify all faces to person
             var identificationResults = await _faceApiClient.IdentifyAsync(WhitelistId, faceIds);
@@ -515,6 +518,22 @@ namespace IotPrototype.FacialRecognition
             }
 
             return recogResult;
+        }
+
+
+        public async Task<Microsoft.ProjectOxford.Face.Contract.Face[]> DetectFacesFromImage(StorageFile imageFile)
+        {
+            if (!FaceApiUtils.ValidateImageFile(imageFile))
+            {
+                throw new FaceRecognitionException(FaceRecognitionExceptionType.InvalidImage);
+            }
+
+            using (var imageStram = await imageFile.OpenStreamForReadAsync())
+            {
+                //List<FaceAttributeType> 
+
+                return await _faceApiClient.DetectAsync(imageStram, true, true, new FaceAttributeType[] { FaceAttributeType.Age, FaceAttributeType.FacialHair, FaceAttributeType.Gender, FaceAttributeType.HeadPose, FaceAttributeType.Smile });
+            }
         }
         #endregion
     }

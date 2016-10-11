@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.Devices.Gpio;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -22,6 +26,7 @@ namespace IotPrototype
             this.Suspending += OnSuspending;
         }
 
+
         /// <summary>
         /// Invoked when the application is launched normally by the end user.  Other entry points
         /// will be used such as when the application is launched to open a specific file.
@@ -30,6 +35,9 @@ namespace IotPrototype
         protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
             Frame rootFrame = Window.Current.Content as Frame;
+
+
+            var controller = GpioController.GetDefault();
 
             // Do not repeat app initialization when the Window already has content,
             // just ensure that the window is active
@@ -59,6 +67,7 @@ namespace IotPrototype
             // Ensure the current window is active
             Window.Current.Activate();
         }
+
 
         /// <summary>
         /// Invoked when Navigation to a certain page fails

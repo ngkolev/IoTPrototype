@@ -75,7 +75,7 @@
     <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
     <NoWarn>;2008</NoWarn>
     <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>ARM</PlatformTarget>
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
@@ -103,6 +103,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Constants.cs" />
+    <Compile Include="EmotionRecognittion\EmotionApi.cs" />
     <Compile Include="Facial Recognition\FaceApiUtils.cs" />
     <Compile Include="Facial Recognition\FaceApiRecognizer.cs" />
     <Compile Include="Facial Recognition\FaceApiWhitelist.cs" />
@@ -110,6 +111,7 @@
     <Compile Include="Facial Recognition\HSFace.cs" />
     <Compile Include="Facial Recognition\HSPerson.cs" />
     <Compile Include="Facial Recognition\IFaceRecognizer.cs" />
+    <Compile Include="Helpers\EmotionHelper.cs" />
     <Compile Include="Helpers\GpioHelper.cs" />
     <Compile Include="Helpers\OxfordFaceAPIHelper.cs" />
     <Compile Include="Helpers\SpeechHelper.cs" />
@@ -170,6 +172,7 @@
       <Name>Windows IoT Extensions for the UWP %28WindowsIoT, Version=10.0.10586.0%29</Name>
     </SDKReference>
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>

@@ -6,12 +6,14 @@
     public static class GeneralConstants
     {
         // This variable should be set to false for devices, unlike the Raspberry Pi, that have GPU support
-        public const bool DisableLiveCameraFeed = true;
+        public const bool DisableLiveCameraFeed = false;
 
         // Oxford Face API Primary should be entered here
         // You can obtain a subscription key for Face API by following the instructions here: https://www.microsoft.com/cognitive-services/en-us/sign-up
-        public const string OxfordAPIKey = "OXFORD_KEY_HERE";
-        
+        public const string FaceAPIKey = "529a8360d78946bc915335ccb265261f";
+
+        public const string EmpitionApiKey = "32a5d40301ab4a109b6725a8fe740149";
+
         // Name of the folder in which all Whitelist data is stored
         public const string WhiteListFolderName = "IoT Prototype";
 

@@ -28,7 +28,7 @@
             <Rectangle Margin="10" Stroke="White" StrokeThickness="4" Grid.RowSpan="2"/>
             <Image x:Name="image" HorizontalAlignment="Center" VerticalAlignment="Center" Source="Assets/CameraIcon.png" Margin="50"/>
             <TextBlock x:Name="DisabledText" TextWrapping="Wrap" Text="The live camera feed has been disabled because of hardware constraints." HorizontalAlignment="Center" VerticalAlignment="Top" Grid.Row="1" FontSize="33.333" TextAlignment="Center" Margin="10,0"/>
-        </Grid> 
+        </Grid>
         <StackPanel x:Name="LiveFeedPanel" Margin="0, 10" Grid.Row="0" Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
             <CaptureElement x:Name='WebcamFeed' Loaded="WebcamFeed_Loaded"/>
         </StackPanel>
@@ -38,7 +38,7 @@
             <TextBlock VerticalAlignment="Center" FontSize="21.333" Grid.Row="1" Text="This may take some time depending on your hardware." TextWrapping="WrapWholeWords" TextAlignment="Center" FontStyle="Italic"/>
 
         </StackPanel>
-        
+
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
@@ -57,6 +57,7 @@
         </Grid>
         <TextBlock x:Name="WelcomeBlock" HorizontalAlignment="Center" Grid.Row="1" TextWrapping="Wrap" Text="Welcome to the Facial Recognition Door!" VerticalAlignment="Center" Grid.ColumnSpan="3" FontSize="53.333" Margin="50,0,50,100"/>
         <TextBlock x:Name="DetailsBlock" HorizontalAlignment="Center" Grid.Row="1" TextWrapping="Wrap" Text="Press the + icon to add a whitelisted user and get started! When you're ready, hit the doorbell icon to try and unlock the door with your face!" VerticalAlignment="Center" Grid.ColumnSpan="3" FontSize="33.333" Margin="50,80,50,0" TextAlignment="Center"/>
+        <TextBlock x:Name="MoveDetected" HorizontalAlignment="Center" Grid.Row="1" Text="MOVE DETECTED" VerticalAlignment="Center" Grid.ColumnSpan="3" Foreground="Red"  FontSize="56" Margin="50,80,50,0" TextAlignment="Center" Visibility="Collapsed" />
     </Grid>
     <Page.BottomAppBar>
         <CommandBar IsOpen="True" IsSticky="True" IsEnabled="True" Foreground="#FF7C3C3C">
