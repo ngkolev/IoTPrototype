@@ -63,7 +63,7 @@ namespace IotPrototype
                 InitializeOxford();
             }
 
-            if(gpioAvailable == false)
+            if (gpioAvailable == false)
             {
                 // If GPIO is not available, attempt to initialize it
                 InitializeGpio();
@@ -87,7 +87,7 @@ namespace IotPrototype
         /// </summary>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            if(initializedOxford)
+            if (initializedOxford)
             {
                 UpdateWhitelistedVisitors();
             }
@@ -152,7 +152,7 @@ namespace IotPrototype
                     await webcam.StartCameraPreview();
                 }
             }
-            else if(webcam.IsInitialized())
+            else if (webcam.IsInitialized())
             {
                 WebcamFeed.Source = webcam.mediaCapture;
 
@@ -280,10 +280,19 @@ namespace IotPrototype
 
                 try
                 {
-                    var emotions = EmotionHelper.DetectEmotions(image);
-                    var allEmotions = (await emotions).Scores.ToRankedList().Where(i=>i.Value > 0.1).OrderByDescending(i => i.Value);
+                    var result = await EmotionHelper.DetectEmotions(image);
+                    var emotions = result.Item1;
+                    var faceAttributes = result.Item2;
+                    var allEmotions = emotions.Scores.ToRankedList().Where(i => i.Value > 0.1).OrderByDescending(i => i.Value);
 
                     var builder = new StringBuilder();
+                    if (faceAttributes.Glasses != Microsoft.ProjectOxford.Face.Contract.Glasses.NoGlasses)
+                    {
+                        builder.Append("You have glasses.");
+                    }
+
+                    builder.Append($"You are {(int)faceAttributes.Age} old { faceAttributes.Gender}. ");
+
                     builder.Append("You feel ");
                     foreach (var emotion in allEmotions)
                     {
@@ -308,7 +317,7 @@ namespace IotPrototype
                     await speech.Read(SpeechContants.NoCameraMessage);
                 }
 
-                if(!initializedOxford)
+                if (!initializedOxford)
                 {
                     // Oxford is still initializing:
                     Debug.WriteLine("Unable to analyze visitor at door as Oxford Facial Recogntion is still initializing.");
@@ -327,7 +336,7 @@ namespace IotPrototype
             // Greet visitor
             await speech.Read(SpeechContants.GeneralGreetigMessage(visitorName));
 
-            if(gpioAvailable)
+            if (gpioAvailable)
             {
                 // Unlock door for specified ammount of time
                 gpioHelper.UnlockDoor();

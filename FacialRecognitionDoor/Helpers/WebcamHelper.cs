@@ -43,9 +43,9 @@ namespace IotPrototype.Helpers
                 mediaCapture = new MediaCapture();
 
                 await mediaCapture.InitializeAsync(settings);
-                await SetMinimalResolution(MediaStreamType.Photo);
-                await SetMinimalResolution(MediaStreamType.VideoPreview);
-                await SetMinimalResolution(MediaStreamType.VideoRecord);
+                //await SetMinimalResolution(MediaStreamType.Photo);
+                //await SetMinimalResolution(MediaStreamType.VideoPreview);
+                //await SetMinimalResolution(MediaStreamType.VideoRecord);
 
                 initialized = true;
             }
