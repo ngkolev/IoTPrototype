@@ -15,6 +15,12 @@ using IotPrototype.Objects;
 using Microsoft.ProjectOxford.Face;
 using System.Text;
 using System.Linq;
+using Sensors.Dht;
+using Windows.Devices.I2c;
+using IotPrototype.Sensors;
+using Windows.Devices.Enumeration;
+using Windows.UI.Xaml.Media;
+using Windows.UI;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -22,6 +28,13 @@ namespace IotPrototype
 {
     public sealed partial class MainPage : Page
     {
+        private bool MoveEnabled = true;
+        private bool TempEnabled = true;
+        private bool LightEnabled = true;
+
+
+        private const string I2C_CONTROLLER_NAME = "I2C1";
+
         // Webcam Related Variables:
         private WebcamHelper webcam;
 
@@ -44,6 +57,26 @@ namespace IotPrototype
         // GUI Related Variables:
         private double visitorIDPhotoGridMaxWidth = 0;
 
+
+        private DispatcherTimer _timer = null;
+
+        private GpioPin _temperaturePin = null;
+
+        private DateTime _lastUpdatedTemp = DateTime.Now;
+
+        private IDht _dht = null;
+
+        //Light sensor
+
+        // I2C Device
+        private I2cDevice I2CDev;        
+        // TSL Sensor
+        private TSL2561 TSL2561Sensor;
+
+        // TSL Gain and MS Values
+        private Boolean Gain = false;
+        private uint MS = 0;
+
         /// <summary>
         /// Called when the page is first navigated to.
         /// </summary>
@@ -54,7 +87,6 @@ namespace IotPrototype
             // Causes this page to save its state when navigating to other pages
             NavigationCacheMode = NavigationCacheMode.Enabled;
 
-            InitalizeMoveDetection();
 
 
             if (initializedOxford == false)
@@ -66,7 +98,7 @@ namespace IotPrototype
             if (gpioAvailable == false)
             {
                 // If GPIO is not available, attempt to initialize it
-                InitializeGpio();
+                //InitializeGpio();
             }
 
             // If user has set the DisableLiveCameraFeed within Constants.cs to true, disable the feed:
@@ -80,6 +112,113 @@ namespace IotPrototype
                 LiveFeedPanel.Visibility = Visibility.Visible;
                 DisabledFeedGrid.Visibility = Visibility.Collapsed;
             }
+
+            // Initialize I2C Device
+            if (LightEnabled)
+            {
+                InitializeI2CDevice();
+            }
+
+            _timer = new DispatcherTimer();
+            _timer.Interval = TimeSpan.FromSeconds(5);
+            _timer.Tick += _timer_Tick;
+
+
+            
+
+        }
+
+        private async void InitializeI2CDevice()
+        {
+            try
+            {
+                // Initialize I2C device
+                var settings = new I2cConnectionSettings(TSL2561.TSL2561_ADDR);
+
+                settings.BusSpeed = I2cBusSpeed.FastMode;
+                settings.SharingMode = I2cSharingMode.Shared;
+
+                string aqs = I2cDevice.GetDeviceSelector(I2C_CONTROLLER_NAME);  /* Find the selector string for the I2C bus controller                   */
+                var dis = await DeviceInformation.FindAllAsync(aqs);            /* Find the I2C bus controller device with our selector string           */
+
+                I2CDev = await I2cDevice.FromIdAsync(dis[0].Id, settings);    /* Create an I2cDevice with our selected bus controller and I2C settings */
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.ToString());
+
+                return;
+            }
+
+            initializeSensor();
+        }
+
+        private void initializeSensor()
+        {
+            // Initialize Sensor
+            TSL2561Sensor = new TSL2561(ref I2CDev);
+
+            // Set the TSL Timing
+            MS = (uint)TSL2561Sensor.SetTiming(false, 2);
+            // Powerup the TSL sensor
+            TSL2561Sensor.PowerUp();
+
+            Debug.WriteLine("TSL2561 ID: " + TSL2561Sensor.GetId());
+        }
+
+
+        private async void _timer_Tick(object sender, object e)
+        {
+
+            if (TempEnabled)
+            {
+                DhtReading reading = new DhtReading();
+                reading = await _dht.GetReadingAsync().AsTask();
+
+                if (reading.IsValid)
+                {
+                    //this.TotalSuccess++;
+                    this.TemperatureDisplay.Text = string.Format("{0:0.0} °C", Convert.ToSingle(reading.Temperature));
+                    this.HumidityDisplay.Text = string.Format("{0:0.0}% RH", Convert.ToSingle(reading.Humidity));
+                    //this.LastUpdatedDisplay = DateTimeOffset.Now;                
+                }
+
+
+                Debug.WriteLine(string.Format("{0:0.0}% RH", Convert.ToSingle(reading.Humidity)));
+                Debug.WriteLine(string.Format("{0:0.0} °C", Convert.ToSingle(reading.Temperature)));
+            }
+
+
+
+            //this.OnPropertyChanged(nameof(LastUpdatedDisplay));
+
+
+            // Retrive luminosity and update the screen
+            if (LightEnabled)
+            {
+                uint[] Data = TSL2561Sensor.GetData();
+
+                Debug.WriteLine("Data1: " + Data[0] + ", Data2: " + Data[1]);
+
+                double luxValue = TSL2561Sensor.GetLux(Gain, MS, Data[0], Data[1]);
+                string info = String.Format("{0:0.0} lux", luxValue);
+                LightDisplay.Text = info;
+
+                Debug.WriteLine("Light: " + info);
+
+                if (luxValue <= 250 || luxValue >= 750)
+                {
+                    LightDisplay.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 0, 0));
+                }
+                else if (luxValue <= 380 || luxValue >= 620)
+                {
+                    LightDisplay.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 204, 0));
+                }
+                else
+                {
+                    LightDisplay.Foreground = new SolidColorBrush(Color.FromArgb(255, 0, 255, 0));
+                }
+            }
         }
 
         /// <summary>
@@ -91,6 +230,48 @@ namespace IotPrototype
             {
                 UpdateWhitelistedVisitors();
             }
+
+            try
+            {
+                //, 
+
+                if (TempEnabled)
+                {
+                    _temperaturePin = GpioController.GetDefault().OpenPin(4, GpioSharingMode.Exclusive);
+                    _dht = new Dht22(_temperaturePin, GpioPinDriveMode.Input);
+                }
+
+                if (MoveEnabled)
+                {
+                    InitalizeMoveDetection();
+                }
+
+                if (TempEnabled || LightEnabled)
+                {
+                    _timer.Start();
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+        }
+
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            _timer.Stop();
+
+            _temperaturePin.Dispose();
+            _temperaturePin = null;
+
+            _dht = null;
+
+            //movePin.ValueChanged -= MovePin_ValueChanged;
+
+
+            base.OnNavigatedFrom(e);
         }
 
         /// <summary>
@@ -444,10 +625,37 @@ namespace IotPrototype
 
             movePin = controller.OpenPin(17);
 
-            DispatcherTimer timer = new DispatcherTimer();
-            timer.Interval = new TimeSpan(0, 0, 0, 0, 500);
-            timer.Tick += Timer_Tick;
-            timer.Start();
+            movePin.DebounceTimeout = TimeSpan.FromMilliseconds(25);
+
+            if (movePin.IsDriveModeSupported(GpioPinDriveMode.InputPullUp))
+            {
+                // Take advantage of built in pull-up resistors of Raspberry Pi 2 and DragonBoard 410c
+                movePin.SetDriveMode(GpioPinDriveMode.InputPullUp);
+            }
+            else
+            {
+                // MBM does not support PullUp as it does not have built in pull-up resistors 
+                movePin.SetDriveMode(GpioPinDriveMode.Input);
+            }
+
+            movePin.ValueChanged += MovePin_ValueChanged;
+
+            /* DispatcherTimer timer = new DispatcherTimer();
+             timer.Interval = new TimeSpan(0, 0, 0, 0, 500);
+             timer.Tick += Timer_Tick;
+             timer.Start();*/
+        }
+
+        private async void MovePin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs args)
+        {
+            var gpioValue = sender.Read();
+
+            await this.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                MoveElypse.Visibility = (gpioValue == GpioPinValue.High ? Visibility.Collapsed : Visibility.Visible);
+            });
+
+            lastMoveValue = gpioValue;
         }
 
         private GpioPin movePin;

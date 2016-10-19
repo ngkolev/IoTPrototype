@@ -8,6 +8,17 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d" RequestedTheme="Dark">
 
+    <Page.Resources>
+        <x:Double x:Key="DashboardFontSize">25</x:Double>
+        <Thickness x:Key="BorderThickness">2</Thickness>
+        <Thickness x:Key="BorderMargin">3,3,3,3</Thickness>
+        <SolidColorBrush x:Key="BorderColor">#FF0063B1</SolidColorBrush>
+        <SolidColorBrush x:Key="DashboardHeaderTextColor">#FF0063B1</SolidColorBrush>
+        <SolidColorBrush x:Key="DashboardTextColor">White</SolidColorBrush>
+        <SolidColorBrush x:Key="DisplayHeaderTextColor">Yellow</SolidColorBrush>
+        <SolidColorBrush x:Key="DisplayTextColor">White</SolidColorBrush>
+    </Page.Resources>
+
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="3*" />
@@ -55,9 +66,122 @@
             </GridView>
             <ProgressRing x:Name="OxfordLoadingRing" Grid.Column="0" IsActive="True" Width="113" Height="80" Grid.RowSpan="2" Foreground="White"/>
         </Grid>
-        <TextBlock x:Name="WelcomeBlock" HorizontalAlignment="Center" Grid.Row="1" TextWrapping="Wrap" Text="Welcome to the Facial Recognition Door!" VerticalAlignment="Center" Grid.ColumnSpan="3" FontSize="53.333" Margin="50,0,50,100"/>
-        <TextBlock x:Name="DetailsBlock" HorizontalAlignment="Center" Grid.Row="1" TextWrapping="Wrap" Text="Press the + icon to add a whitelisted user and get started! When you're ready, hit the doorbell icon to try and unlock the door with your face!" VerticalAlignment="Center" Grid.ColumnSpan="3" FontSize="33.333" Margin="50,80,50,0" TextAlignment="Center"/>
-        <TextBlock x:Name="MoveDetected" HorizontalAlignment="Center" Grid.Row="1" Text="MOVE DETECTED" VerticalAlignment="Center" Grid.ColumnSpan="3" Foreground="Red"  FontSize="56" Margin="50,80,50,0" TextAlignment="Center" Visibility="Collapsed" />
+        <Grid Grid.Row="1" Grid.ColumnSpan="3">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*" />
+                <RowDefinition Height="1*" />
+            </Grid.RowDefinitions>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="1*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Humidity -->
+            <TextBlock Grid.Column="0"
+                       Grid.Row="0"
+                       Text="Humidity"
+                       FontSize="50"
+                       VerticalAlignment="Bottom"
+                       HorizontalAlignment="Center"
+                       Foreground="{StaticResource DisplayHeaderTextColor}" />
+            <TextBlock Grid.Column="0"
+                       Grid.Row="1"
+                       x:Name="HumidityDisplay"
+                       Text="N/A"
+                       FontSize="90"
+                       VerticalAlignment="Top"
+                       HorizontalAlignment="Center"
+                       Margin="10,10,10,10"
+                       Foreground="{StaticResource DisplayTextColor}" />
+
+            <!-- Temperature -->
+            <TextBlock Grid.Column="1"
+                       Grid.Row="0"
+                       Text="Temperature"
+                       FontSize="50"
+                       VerticalAlignment="Bottom"
+                       HorizontalAlignment="Center"
+                       Foreground="{StaticResource DisplayHeaderTextColor}" />
+            <TextBlock Grid.Column="1"
+                       x:Name="TemperatureDisplay"
+                       Grid.Row="1"
+                       Text="N/A"
+                       FontSize="90"
+                       VerticalAlignment="Top"
+                       HorizontalAlignment="Center"
+                       Margin="10,10,10,10"
+                       Foreground="{StaticResource DisplayTextColor}" />
+
+            <!-- Light -->
+            <TextBlock Grid.Column="2"
+                       Grid.Row="0"
+                       Text="Light"
+                       FontSize="50"
+                       VerticalAlignment="Bottom"
+                       HorizontalAlignment="Center"
+                       Foreground="{StaticResource DisplayHeaderTextColor}" />
+            <TextBlock Grid.Column="2"
+                       Grid.Row="1"
+                       x:Name="LightDisplay"
+                       Text="N/A"
+                       FontSize="90"
+                       VerticalAlignment="Top"
+                       HorizontalAlignment="Center"
+                       Margin="10,10,10,10"
+                       Foreground="{StaticResource DisplayTextColor}" />
+
+            <!-- Movement -->
+            <TextBlock Grid.Column="3"
+                       Grid.Row="0"
+                       Text="Movement"
+                       FontSize="50"
+                       VerticalAlignment="Bottom"
+                       HorizontalAlignment="Center"
+                       Foreground="{StaticResource DisplayHeaderTextColor}" />
+
+            <Ellipse
+                x:Name="MoveElypse"
+                Grid.Column="3"
+                Grid.Row="1"
+                Fill="Red"
+                Height="180"
+                Width="180"
+                StrokeThickness="1"
+                Stroke="Black"
+                Visibility="Collapsed"/>
+            <TextBlock Grid.Column="3"
+                       Grid.Row="1"
+                       x:Name="MoveDetected"
+                       Text="MOVE"
+                       FontSize="120"
+                       VerticalAlignment="Top"
+                       HorizontalAlignment="Center"
+                       
+                       Margin="10,10,10,10"
+                       Foreground="Red"
+                       Visibility="Collapsed"/>
+            <!-- Last Updated 
+            <TextBlock Grid.Column="0"
+                       Grid.Row="2"
+                       Text="Last Updated:"
+                       FontSize="35"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Right"
+                       Foreground="{StaticResource DisplayHeaderTextColor}"
+                       Margin="0,0,20,0" />
+            <TextBlock Grid.Column="1"
+                       Grid.Row="2"
+                       x:Name="LastUpdatedDisplay"
+                       Text="{x:Bind LastUpdatedDisplay, Mode=OneWay}"
+                       FontSize="35"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Left"
+                       Margin="20,0,0,0"
+                       Foreground="{StaticResource DisplayTextColor}" />-->
+        </Grid>
     </Grid>
     <Page.BottomAppBar>
         <CommandBar IsOpen="True" IsSticky="True" IsEnabled="True" Foreground="#FF7C3C3C">
